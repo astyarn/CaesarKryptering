@@ -7,7 +7,10 @@
             Console.WriteLine("Velkommen til Cæsar krypteringsprogram");
             Console.Write("For kryptering tast 1 \n" +
                 "for dekryptering tast 2 \n" +
-                "for brute force tast 3 ");
+                "for brute force tast 3 \n"+ 
+                "for file upload Encryption tast 4 \n"+
+                "for file upload decryption tast 5 \n"+
+                "for file upload decryption with prediction tast 6 \n");
             ConsoleKeyInfo cki = Console.ReadKey();
             Console.WriteLine("");
             Console.WriteLine("----------------------------------------------");
@@ -19,7 +22,7 @@
                 Console.WriteLine("Indtast nøgle: ");
                 string inputShift = Console.ReadLine();
                 int shift = int.Parse(inputShift);
-                
+
                 string result = EncryptText(input, shift);
                 Console.WriteLine($"Krypteret text med {shift} skift: {result}");
 
@@ -48,6 +51,131 @@
                 {
                     Console.WriteLine($"Shift {i}: {item}");
                     i++;
+                }
+            }
+            else if (cki.Key == ConsoleKey.D4 || cki.Key == ConsoleKey.NumPad4)
+            {
+                Console.WriteLine("Indtast stien til din tekstfil (f.eks. C:\\path\\to\\file.txt): ");
+                string filePath = Console.ReadLine();
+
+                if (File.Exists(filePath))
+                {
+                    string input = File.ReadAllText(filePath);
+
+                    Console.WriteLine("Indtast nøgle: ");
+                    string inputShift = Console.ReadLine();
+                    int shift = int.Parse(inputShift);
+
+                    string encryptedText = EncryptText(input, shift);
+
+                    string directory = Path.GetDirectoryName(filePath);     
+                    string newFileName = Path.GetFileNameWithoutExtension(filePath) + "_encrypted.txt"; 
+                    string newFilePath = Path.Combine(directory, newFileName); 
+
+                    File.WriteAllText(newFilePath, encryptedText);
+
+                    Console.WriteLine($"Krypteret tekst er gemt i filen: {newFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine("Fil ikke fundet. Sørg for at stien er korrekt.");
+                }
+            }
+            else if (cki.Key == ConsoleKey.D5 || cki.Key == ConsoleKey.NumPad5)
+            {
+                Console.WriteLine("Indtast stien til din tekstfil (f.eks. C:\\path\\to\\file.txt): ");
+                string filePath = Console.ReadLine();
+
+                if (File.Exists(filePath))
+                {
+                    string input = File.ReadAllText(filePath);
+
+                    string directory = Path.GetDirectoryName(filePath); 
+                    string baseFileName = Path.GetFileNameWithoutExtension(filePath); 
+
+                    for (int shift = 1; shift <= 25; shift++)
+                    {
+                        string decryptedText = DecryptText(input, shift);
+
+                        string newFileName = $"{baseFileName}_decrypted_{shift}.txt"; 
+                        string newFilePath = Path.Combine(directory, newFileName); 
+
+                        File.WriteAllText(newFilePath, decryptedText);
+
+                        Console.WriteLine($"Dekrypteret tekst med {shift} skift er gemt i filen: {newFilePath}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Fil ikke fundet. Sørg for at stien er korrekt.");
+                }
+            }
+            else if (cki.Key == ConsoleKey.D6 || cki.Key == ConsoleKey.NumPad6)
+            {
+                Console.WriteLine("Indtast stien til din tekstfil (f.eks. C:\\path\\to\\file.txt): ");
+                string filePath = Console.ReadLine();
+
+                if (File.Exists(filePath))
+                {
+                    string input = File.ReadAllText(filePath);
+
+                    // Expected English letter frequency (simplified version)
+                    var englishLetterFrequency = new Dictionary<char, double>
+                    {
+                        { 'e', 12.70 }, { 't', 9.06 }, { 'a', 8.17 }, { 'o', 7.51 }, { 'i', 6.97 },
+                        { 'n', 6.75 }, { 's', 6.33 }, { 'h', 6.09 }, { 'r', 5.99 }, { 'd', 4.25 },
+                        { 'l', 4.03 }, { 'u', 2.76 }, { 'c', 2.23 }, { 'm', 2.02 }, { 'f', 1.97 },
+                        { 'y', 1.97 }, { 'p', 1.93 }, { 'b', 1.49 }, { 'g', 1.49 }, { 'v', 0.98 },
+                        { 'k', 0.77 }, { 'x', 0.15 }, { 'q', 0.10 }, { 'j', 0.10 }, { 'z', 0.07 }
+                    };
+
+                    // Normalize the frequencies so they sum to 1
+                    double totalFrequency = englishLetterFrequency.Values.Sum();
+                    var normalizedEnglishFrequency = englishLetterFrequency.ToDictionary(
+                        pair => pair.Key, pair => pair.Value / totalFrequency);
+
+                    string bestDecryptedText = "";
+                    int bestShift = 0;
+                    double bestMatch = double.MinValue;
+
+                    // Loop through all 25 shifts
+                    for (int shift = 1; shift <= 25; shift++)
+                    {
+                        string decryptedText = DecryptText(input, shift);
+
+                        var letterFrequency = CalculateLetterFrequency(decryptedText);
+
+                        // Normalize the frequency distribution
+                        double totalLetters = letterFrequency.Values.Sum();
+                        var normalizedLetterFrequency = letterFrequency.ToDictionary(
+                            pair => pair.Key, pair => pair.Value / totalLetters);
+
+                        // Calculate the similarity score based on Euclidean distance
+                        double similarity = CalculateFrequencySimilarity(normalizedLetterFrequency, normalizedEnglishFrequency);
+
+                        // If this shift produces the most "English-like" text, update the best match
+                        if (similarity > bestMatch)
+                        {
+                            bestMatch = similarity;
+                            bestShift = shift;
+                            bestDecryptedText = decryptedText;
+                        }
+                    }
+
+                    Console.WriteLine($"Den bedste dekryptering blev fundet med {bestShift} skift.");
+                    Console.WriteLine("Dekrypteret tekst:");
+                    Console.WriteLine(bestDecryptedText);
+
+                    string directory = Path.GetDirectoryName(filePath);
+                    string baseFileName = Path.GetFileNameWithoutExtension(filePath);
+                    string bestDecryptedFilePath = Path.Combine(directory, $"{baseFileName}_best_decrypted_whith_shift_{bestShift}.txt");
+
+                    File.WriteAllText(bestDecryptedFilePath, bestDecryptedText);
+                    Console.WriteLine($"Den bedste dekrypterede tekst er gemt i filen: {bestDecryptedFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine("Fil ikke fundet. Sørg for at stien er korrekt.");
                 }
             }
             else
@@ -86,8 +214,9 @@
             {
                 if (char.IsLetter(c) && "ÆØÅ".IndexOf(c) == -1) //Frasort ikke bostaver og bogstaver som æ, ø, å
                 {
-                    char offset = 'A';      //sæt start til wrap around
-                    result += (char)(((c - offset - shift) % 26) + offset);
+                    char offset = 'A'; //sæt start til wrap around
+                                       // Ensure that the shift wraps around the alphabet correctly
+                    result += (char)(((c - offset - shift + 26) % 26) + offset);
                 }
                 else
                 {
@@ -96,7 +225,6 @@
             }
 
             return result;
-
         }
 
         public static List<string> BruteForceDecryptText(string input)
@@ -124,6 +252,37 @@
             }
 
             return results;
+        }
+
+        // Method to calculate the frequency of each letter in the text
+        static Dictionary<char, double> CalculateLetterFrequency(string text)
+        {
+            var letterFrequency = new Dictionary<char, double>();
+            foreach (char c in text.ToLower())
+            {
+                if (char.IsLetter(c))
+                {
+                    if (!letterFrequency.ContainsKey(c))
+                    {
+                        letterFrequency[c] = 0;
+                    }
+                    letterFrequency[c]++;
+                }
+            }
+            return letterFrequency;
+        }
+
+        // Method to calculate the similarity between two frequency distributions
+        static double CalculateFrequencySimilarity(Dictionary<char, double> freq1, Dictionary<char, double> freq2)
+        {
+            double similarity = 0;
+            foreach (var letter in freq1.Keys.Concat(freq2.Keys).Distinct())
+            {
+                double freq1Value = freq1.ContainsKey(letter) ? freq1[letter] : 0;
+                double freq2Value = freq2.ContainsKey(letter) ? freq2[letter] : 0;
+                similarity += Math.Pow(freq1Value - freq2Value, 2);
+            }
+            return 1 / (1 + similarity);  // A smaller distance means higher similarity
         }
     }
 }

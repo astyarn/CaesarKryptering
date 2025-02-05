@@ -54,7 +54,7 @@
                 }
                 else
                 {
-                    result += c; // behold ikke bostaver som de er
+                    result += c; // behold ikke-bostaver som de er
                 }
             }
 
@@ -75,7 +75,7 @@
                 }
                 else
                 {
-                    result += c; // behold ikke bostaver som de er
+                    result += c; // behold ikke-bostaver som de er
                 }
             }
 

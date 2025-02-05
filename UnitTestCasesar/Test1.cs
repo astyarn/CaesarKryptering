@@ -8,6 +8,7 @@ namespace UnitTestCasesar
     {
         private const string Expected1 = "BCDE";
         private const string Expected2 = "ABCD";
+        private const string Expected3 = "MPZR LY NVKA MVY KPN!";
 
         [TestMethod]
         public void TestEncryptText()
@@ -63,6 +64,19 @@ namespace UnitTestCasesar
 
             // Assert
             Assert.AreNotEqual(Expected1, result, "Decryption failed");
+        }
+
+        [TestMethod]
+        public void BruteForce()
+        {
+            // Arrange
+            string input = "Fisk er godt for dig!";
+
+            // Act
+            List<string> result = CaesarKryptering.Program.BruteForceDecryptText(input);
+
+            // Assert
+            Assert.AreNotEqual(Expected1, result[6], "Decryption failed");
         }
     }
 }

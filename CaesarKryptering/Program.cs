@@ -334,7 +334,7 @@
         }
 
         //Udvid Vigenere key to match supplied tekst
-        static string ExtendKey(string text, string key)
+        public static string ExtendKey(string text, string key)
         {
             // Convert the text to uppercase to ensure both text and key are in sync
             text = text.ToUpper();
@@ -359,7 +359,7 @@
             return new string(result);
         }
 
-        static string VigenereTransform(string text, string extendedKey, bool encrypt)
+        public static string VigenereTransform(string text, string extendedKey, bool encrypt)
         {
             // Convert the input text to uppercase first to ensure case-insensitivity
             text = text.ToUpper();

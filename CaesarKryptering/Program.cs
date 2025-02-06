@@ -10,7 +10,9 @@
                 "for brute force tast 3 \n"+ 
                 "for file upload Encryption tast 4 \n"+
                 "for file upload decryption tast 5 \n"+
-                "for file upload decryption with prediction tast 6 \n");
+                "for file upload decryption with prediction tast 6 \n"+
+                "for Viginere Encryption tast 7 \n"+
+                "for Viginere Decryption tast 8 \n");
             ConsoleKeyInfo cki = Console.ReadKey();
             Console.WriteLine("");
             Console.WriteLine("----------------------------------------------");
@@ -178,6 +180,32 @@
                     Console.WriteLine("Fil ikke fundet. Sørg for at stien er korrekt.");
                 }
             }
+            else if (cki.Key == ConsoleKey.D7 || cki.Key == ConsoleKey.NumPad7)
+            {
+                Console.WriteLine("Indtast din besked der skal krypteres: ");
+                string input = Console.ReadLine();
+                Console.WriteLine("Indtast nøgle: ");
+                string inputKey = Console.ReadLine();
+
+                string extendedKey = ExtendKey(input, inputKey);
+
+                Console.WriteLine("Krypteret tekst:");
+                Console.WriteLine($"{VigenereTransform(input,extendedKey,true)}");
+                
+
+            }
+            else if (cki.Key == ConsoleKey.D8 || cki.Key == ConsoleKey.NumPad8)
+            {
+                Console.WriteLine("Indtast din besked der skal dekrypteres: ");
+                string input = Console.ReadLine();
+                Console.WriteLine("Indtast nøgle: ");
+                string inputKey = Console.ReadLine();
+
+                string extendedKey = ExtendKey(input, inputKey);
+
+                Console.WriteLine("Dekrypteret tekst:");
+                Console.WriteLine($"{VigenereTransform(input, extendedKey, false)}");
+            }
             else
             {
                 Console.WriteLine("Ugyldig input!");
@@ -206,6 +234,16 @@
 
         }
 
+        public static char EncryptChar(char input, int shift)
+        {
+            if (char.IsLetter(input) && "ÆØÅ".IndexOf(input) == -1) // Exclude non-letter characters
+            {
+                char offset = 'A'; // Handle shift using 'A' as base for uppercase letters
+                return (char)(((char.ToUpper(input) - 'A' + shift) % 26) + offset); // Shift based on uppercase value
+            }
+            return input;
+        }
+
         public static string DecryptText(string input, int shift)
         {
             string result = "";
@@ -225,6 +263,16 @@
             }
 
             return result;
+        }
+
+        public static char DecryptChar(char input, int shift)
+        {
+            if (char.IsLetter(input) && "ÆØÅ".IndexOf(input) == -1) // Exclude non-letter characters
+            {
+                char offset = 'A'; // Handle shift using 'A' as base for uppercase letters
+                return (char)(((char.ToUpper(input) - 'A' - shift + 26) % 26) + offset); // Decrypt based on uppercase value
+            }
+            return input;
         }
 
         public static List<string> BruteForceDecryptText(string input)
@@ -283,6 +331,63 @@
                 similarity += Math.Pow(freq1Value - freq2Value, 2);
             }
             return 1 / (1 + similarity);  // A smaller distance means higher similarity
+        }
+
+        //Udvid Vigenere key to match supplied tekst
+        static string ExtendKey(string text, string key)
+        {
+            // Convert the text to uppercase to ensure both text and key are in sync
+            text = text.ToUpper();
+
+            char[] result = new char[text.Length];
+            int keyIndex = 0;
+            int keyLength = key.Length;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] == ' ') // Preserve spaces in the text
+                {
+                    result[i] = ' ';
+                }
+                else
+                {
+                    result[i] = key[keyIndex % keyLength]; // Extend the key to match the text length
+                    keyIndex++;
+                }
+            }
+
+            return new string(result);
+        }
+
+        static string VigenereTransform(string text, string extendedKey, bool encrypt)
+        {
+            // Convert the input text to uppercase first to ensure case-insensitivity
+            text = text.ToUpper();
+
+            string result = "";
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char tekstChar = text[i];
+                char keyChar = extendedKey[i];
+
+                if (char.IsLetter(tekstChar) && encrypt)
+                {
+                    int shift = char.ToUpper(keyChar) - 'A'; // Convert key char to uppercase and calculate shift
+                    result += EncryptChar(tekstChar, shift);
+                }
+                else if (char.IsLetter(tekstChar) && !encrypt)
+                {
+                    int shift = char.ToUpper(keyChar) - 'A'; // Convert key char to uppercase and calculate shift
+                    result += DecryptChar(tekstChar, shift);
+                }
+                else
+                {
+                    result += tekstChar; // Keep spaces in the text as they are
+                }
+            }
+
+            return result;
         }
     }
 }
